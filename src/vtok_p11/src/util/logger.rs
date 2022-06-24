@@ -18,7 +18,7 @@ impl Logger {
 
 impl Log for Logger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Error
+        metadata.level() <= Level::Trace
     }
 
     fn flush(&self) {}

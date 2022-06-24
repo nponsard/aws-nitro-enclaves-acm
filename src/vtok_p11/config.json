@@ -1,0 +1,18 @@
+{
+    "slots": [
+        {
+            "label": "testLabel",
+            "private_keys": [
+                {
+                    "pem": "",
+                    "encrypted_pem_b64": "",
+                    "id": 0,
+                    "label": "keyLabel",
+                    "cert_pem": ""
+                }
+            ],
+            "pin": "1234",
+            "expiry_ts": 0
+        }
+    ]
+}
