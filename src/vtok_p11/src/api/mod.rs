@@ -137,6 +137,9 @@ use crate::data;
 use crate::defs;
 use crate::pkcs11;
 use crate::util::logger::Logger;
+use openapi::apis::configuration;
+use openapi::apis::default_api;
+//use tokio::runtime::Builder;
 
 /// See PKCS#11 v2.40 Section 5.4 General-purpose functions
 #[no_mangle]
@@ -172,7 +175,6 @@ pub extern "C" fn C_Initialize(pInitArgs: pkcs11::CK_VOID_PTR) -> pkcs11::CK_RV 
     if maybe_device.is_some() {
         return pkcs11::CKR_CRYPTOKI_ALREADY_INITIALIZED;
     }
-
     Device::new()
         .map(|device| maybe_device.replace(device))
         .map(|_| pkcs11::CKR_OK)
@@ -204,8 +206,17 @@ pub extern "C" fn C_GetInfo(info: pkcs11::CK_INFO_PTR) -> pkcs11::CK_RV {
     }
 
     lock_device!(guard, device);
-    unsafe {
-        std::ptr::write(info, device.ck_info());
+
+    let conf = configuration::Configuration::default();
+
+    let resp = default_api::health_ready_get(&conf);
+
+    if resp.is_ok() {
+        unsafe {
+            std::ptr::write(info, device.ck_info());
+        }
+        pkcs11::CKR_OK
+    } else {
+        pkcs11::CKR_GENERAL_ERROR
     }
-    pkcs11::CKR_OK
 }
