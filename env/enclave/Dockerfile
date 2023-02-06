@@ -33,7 +33,11 @@ RUN apk add \
     make \
     linux-headers \
     shadow \
-    sudo
+    sudo \
+    pkgconfig \
+    openssl-dev \
+    openssl \
+    clang 
 
 # Only needed to build aws-lc
 RUN apk add quilt --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
