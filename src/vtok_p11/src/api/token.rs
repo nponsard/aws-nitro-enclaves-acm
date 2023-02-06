@@ -1,7 +1,13 @@
 // Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+use std::convert::TryInto;
+
+use openapi::apis::configuration::Configuration;
+use openapi::apis::default_api;
+
 use crate::pkcs11;
+use crate::pkcs11::CK_TOKEN_INFO;
 use crate::Error;
 
 /// See PKCS#11 v2.40 Section 5.5 Slot and token management functions
@@ -91,15 +97,44 @@ pub extern "C" fn C_GetTokenInfo(
         error!("C_GetTokenInfo() called with NULL OUTPUT pointer.");
         return pkcs11::CKR_ARGUMENTS_BAD;
     }
+    let conf = Configuration::default();
 
     device
         .token(slotID)
         .and_then(|token| {
-            let ck_info = token.ck_info();
-            unsafe {
-                std::ptr::write(pInfo, ck_info);
+            let mut ck_info = token.ck_info();
+
+            let result = default_api::info_get(&conf);
+
+            if let Ok(info) = result {
+                // convert the vendor string to u8 array
+
+                let mut vendor_bytes = info.vendor.into_bytes();
+                vendor_bytes.resize(32, 0);
+                let mut manufacturerID = [0; 32];
+                manufacturerID.copy_from_slice(&vendor_bytes);
+
+                // convert the model string to u8 array
+
+                let mut product_bytes = info.product.into_bytes();
+                product_bytes.resize(16, 0);
+                let mut model = [0; 16];
+                model.copy_from_slice(&product_bytes);
+
+                // change the values in the structure
+
+                ck_info.manufacturerID = manufacturerID;
+                ck_info.model = model;
+
+                unsafe {
+                    std::ptr::write(pInfo, ck_info);
+                }
+                Ok(pkcs11::CKR_OK)
+            } else {
+                // if the request fails, return an error code
+
+                Err(Error::GeneralError)
             }
-            Ok(pkcs11::CKR_OK)
         })
         .unwrap_or_else(|e| e.into())
 }
