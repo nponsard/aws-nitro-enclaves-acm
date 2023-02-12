@@ -10,6 +10,9 @@
 
 use reqwest;
 
+// import vtok_common
+use vtok_common;
+
 #[derive(Debug, Clone)]
 pub struct Configuration {
     pub base_path: String,
@@ -24,15 +27,50 @@ pub struct Configuration {
 
 pub type BasicAuth = (String, Option<String>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ApiKey {
     pub prefix: Option<String>,
     pub key: String,
 }
 
+impl ApiKey {
+    pub fn from_api_configuration(vtok_api_key: vtok_common::config::ApiKey) -> Self {
+        ApiKey {
+            prefix: vtok_api_key.prefix,
+            key: vtok_api_key.key,
+        }
+    }
+}
+
 impl Configuration {
     pub fn new() -> Configuration {
         Configuration::default()
+    }
+
+
+    // apply the configuration from the file
+    pub fn new_with_api_configuration(
+        file_config: vtok_common::config::ApiConfiguration,
+    ) -> Configuration {
+        // create with default values then override with config values
+
+        let mut configuration = Configuration::default();
+
+        configuration.base_path = file_config.base_path.unwrap_or(configuration.base_path);
+        configuration.user_agent = file_config.user_agent.or(configuration.user_agent);
+        configuration.basic_auth = file_config.basic_auth.or(configuration.basic_auth);
+        configuration.oauth_access_token = file_config
+            .oauth_access_token
+            .or(configuration.oauth_access_token);
+        configuration.bearer_access_token = file_config
+            .bearer_access_token
+            .or(configuration.bearer_access_token);
+
+        if let Some(api_key) = file_config.api_key {
+            configuration.api_key = Some(ApiKey::from_api_configuration(api_key));
+        }
+
+        configuration
     }
 }
 

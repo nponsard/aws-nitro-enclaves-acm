@@ -19,6 +19,7 @@ pub struct Device {
     slots: Vec<Slot>,
     session_slot_map: HashMap<pkcs11::CK_SESSION_HANDLE, pkcs11::CK_SLOT_ID>,
     next_session_handle: pkcs11::CK_SESSION_HANDLE,
+    api_configuration: openapi::apis::configuration::Configuration,
 }
 
 impl Device {
@@ -37,11 +38,20 @@ impl Device {
             });
         }
 
+        // load the api configuration from the config file
+
+        let api_configuration = openapi::apis::configuration::Configuration::new_with_api_configuration(config.api_configuration().to_owned());
+
         Ok(Self {
             slots,
             session_slot_map: HashMap::new(),
             next_session_handle: 1,
+            api_configuration,
         })
+    }
+
+    pub fn api_configuration(&self) -> &openapi::apis::configuration::Configuration {
+        &self.api_configuration
     }
 
     pub fn ck_info(&self) -> pkcs11::CK_INFO {

@@ -207,7 +207,7 @@ pub extern "C" fn C_GetInfo(info: pkcs11::CK_INFO_PTR) -> pkcs11::CK_RV {
 
     lock_device!(guard, device);
 
-    let conf = configuration::Configuration::default();
+    let conf = device.api_configuration();
 
     let resp = default_api::health_ready_get(&conf);
 

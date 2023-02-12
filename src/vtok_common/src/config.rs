@@ -34,9 +34,29 @@ pub struct Token {
     pub expiry_ts: u64,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ApiConfiguration {
+    pub base_path: Option<String>,
+    pub user_agent: Option<String>,
+    pub basic_auth: Option<BasicAuth>,
+    pub oauth_access_token: Option<String>,
+    pub bearer_access_token: Option<String>,
+    pub api_key: Option<ApiKey>,
+}
+
+
+pub type BasicAuth = (String, Option<String>);
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ApiKey {
+    pub prefix: Option<String>,
+    pub key: String,
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Device {
     slots: Vec<Option<Token>>,
+    api_configuration:ApiConfiguration, 
 }
 
 /// Device config helper, used to safely access the global p11ne config, stored in the file system
@@ -67,6 +87,7 @@ impl Config {
 
         let mut device = Device {
             slots: Vec::with_capacity(defs::DEVICE_MAX_SLOTS),
+            api_configuration:ApiConfiguration::default(),
         };
         for _ in 0..defs::DEVICE_MAX_SLOTS {
             device.slots.push(None);
@@ -75,6 +96,10 @@ impl Config {
         serde_json::to_writer(BufWriter::new(file), &device).map_err(Error::SerdeError)?;
 
         Ok(())
+    }
+
+    pub fn api_configuration(&self) -> &ApiConfiguration {
+        &self.device.api_configuration
     }
 
     /// Load the config in read-only mode.
