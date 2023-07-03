@@ -31,7 +31,7 @@ EVBIN_INIT=p11ne-init
 EVBIN_P11_MOD=libvtok_p11.so
 
 P11NE_PARENT_RUST_TOOLCHAIN=1.47.0
-P11NE_ENCLAVE_RUST_TOOLCHAIN=1.56.0
+P11NE_ENCLAVE_RUST_TOOLCHAIN=1.70.0
 
 USAGE="\
 $MY_NAME
@@ -247,7 +247,8 @@ build_enclave_ctr() {
         --build-arg GROUP_ID=$(id -g) \
         --build-arg RUST_TOOLCHAIN="$P11NE_ENCLAVE_RUST_TOOLCHAIN" \
         --build-arg CTR_HOME="$CTR_HOME" \
-        "$EVAULT_SRC_DIR/env/enclave"
+        "$EVAULT_SRC_DIR/env/enclave" \
+        --progress plain
 }
 
 build_eif() {
